@@ -1,0 +1,205 @@
+\documentclass[autodetect-engine,
+dvi=dvipdfmx,ja=standard,
+               a4j,11pt]{bxjsarticle}
+
+%% ======== パッケージ類 ========================================== %%
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{geometry}
+\usepackage{bytefield}
+
+\geometry{reset,paperwidth=210truemm,paperheight=297truemm,
+          hmargin=25truemm,top=20truemm,bottom=25truemm,footskip=10truemm}
+
+\usepackage{graphicx}
+\usepackage{fancyvrb}
+\fvset{numbers=left, numbersep=6pt, fontsize=\small, xleftmargin=10mm}
+\usepackage{booktabs}
+\usepackage{caption}
+\usepackage{siunitx}
+\sisetup{detect-all, table-format=3.0}
+
+%% ======== タイトルなど ========================================== %%
+\title{SMLを使用したTodoリストアプリケーションの実装}
+
+\author{学生番号: 09B23549\\
+        提出者:  中嶋 空偉\\
+        E-mail: pj9y6y4w@s.okayama-u.ac.jp}
+\date{
+      締切日: 2025年5月26日 (月)}
+
+\begin{document}
+\maketitle
+
+\section{プログラムの概要}
+本レポートでは，Standard ML（SML）を使用して実装したTodoリストアプリケーションについて述べる．
+このアプリケーションは，タスクの管理，追加，更新，削除などの基本的な機能を提供し，
+授業で学んだSMLの機能を活用して実装されている．
+
+\section{作ろうと思った背景}
+新しいプログラミング言語を学ぶ際，私は常にHelloWorldプログラムを作成し，
+次にTodoリストプログラムを実装するという習慣がある．
+HelloWorldは基本的すぎるため，今回はTodoリストの実装に焦点を当てた．
+
+SMLは関数型プログラミング言語であり，パターンマッチングや再帰関数，
+高階関数などの特徴的な機能を持つ．これらの機能を活用して，
+実用的なアプリケーションを実装できるかという挑戦的な目標を設定した．
+
+\section{実装したい機能}
+本アプリケーションでは，以下のCRUD（Create, Read, Update, Delete）機能を実装する：
+
+\begin{itemize}
+    \item Create: 新しいTodoアイテムの作成
+    \item Read: Todoリストの表示，完了/未完了のフィルタリング
+    \item Update: Todoアイテムの更新，状態の変更
+    \item Delete: Todoアイテムの削除
+\end{itemize}
+
+\section{SMLプログラムへの実装方法}
+\subsection{データ構造の設計}
+まず，Todoアイテムを表現するためのデータ型を定義した：
+
+\begin{verbatim}
+datatype status = Pending | Completed;
+
+datatype todo = Todo of {
+    title: string,
+    description: string,
+    dueDate: string,
+    status: status
+};
+
+type todoList = todo list;
+\end{verbatim}
+
+\subsection{主要な関数の実装}
+\subsubsection{作成機能}
+新しいTodoアイテムを作成する関数を実装した：
+
+\begin{verbatim}
+fun createTodo (title: string, description: string, 
+               dueDate: string) : todo =
+    Todo {
+        title = title,
+        description = description,
+        dueDate = dueDate,
+        status = Pending
+    };
+\end{verbatim}
+
+\subsubsection{表示機能}
+Todoリストを表示する関数を実装した：
+
+\begin{verbatim}
+fun displayList (list: todoList) : unit =
+    let
+        fun display (l: todoList, index: int) : unit =
+            case l of
+                [] => ()
+              | x::xs => (
+                    print ("[" ^ Int.toString index ^ "] ");
+                    displayTodo x;
+                    display (xs, index + 1)
+                )
+    in
+        display (list, 0)
+    end;
+\end{verbatim}
+
+\subsubsection{更新機能}
+Todoアイテムの状態を更新する関数を実装した：
+
+\begin{verbatim}
+fun updateStatus (list: todoList, index: int, 
+                 newStatus: status) : todoList =
+    let
+        fun update (l: todoList, i: int, 
+                   acc: todoList) : todoList =
+            case (l, i) of
+                ([], _) => rev acc
+              | (Todo {title, description, dueDate, status}::xs, 0) =>
+                    rev acc @ (Todo {
+                        title=title, 
+                        description=description, 
+                        dueDate=dueDate, 
+                        status=newStatus
+                    }::xs)
+              | (x::xs, n) => update (xs, n-1, x::acc)
+    in
+        update (list, index, [])
+    end;
+\end{verbatim}
+
+\subsubsection{削除機能}
+Todoアイテムを削除する関数を実装した：
+
+\begin{verbatim}
+fun removeTodo (list: todoList, index: int) : todoList =
+    let
+        fun remove (l: todoList, i: int, 
+                   acc: todoList) : todoList =
+            case (l, i) of
+                ([], _) => rev acc
+              | (x::xs, 0) => rev acc @ xs
+              | (x::xs, n) => remove (xs, n-1, x::acc)
+    in
+        remove (list, index, [])
+    end;
+\end{verbatim}
+
+\section{テスト結果}
+プログラムの動作確認を行った結果，以下の機能が正常に動作することを確認した：
+
+\begin{itemize}
+    \item Todoアイテムの作成と表示
+    \item 状態の更新（完了/未完了の切り替え）
+    \item アイテムの削除
+    \item 完了済み/未完了のフィルタリング
+\end{itemize}
+
+テストの実行結果は以下の通りである：
+
+\begin{verbatim}
+=== すべてのTodo ===
+[0] タイトル: テスト
+説明: テスト用のTodo
+期限: 2024-03-21
+状態: 完了
+-------------------
+[1] タイトル: テスト2
+説明: 2つ目のテスト
+期限: 2024-03-22
+状態: 未完了
+-------------------
+
+=== 完了済みのTodo ===
+[0] タイトル: テスト
+説明: テスト用のTodo
+期限: 2024-03-21
+状態: 完了
+-------------------
+
+=== 未完了のTodo ===
+[1] タイトル: テスト2
+説明: 2つ目のテスト
+期限: 2024-03-22
+状態: 未完了
+-------------------
+\end{verbatim}
+
+\section{まとめ}
+本レポートでは，SMLを使用したTodoリストアプリケーションの実装について述べた．
+授業で学んだSMLの機能を活用し，実用的なアプリケーションを実装することができた．
+特に，パターンマッチングや再帰関数，高階関数などの機能を効果的に使用することで，
+簡潔で保守性の高いコードを実現することができた．
+授業で習った時は，シンプルなものしか作れないと感じていたが，実用的なアプリケーションを実装することができたことに満足している．
+
+今後の課題として，以下の機能の追加が考えられる：
+\begin{itemize}
+    \item 期限によるソート機能
+    \item ファイルへの保存/読み込み機能
+    \item より詳細な検索機能
+    \item エラー処理の強化
+\end{itemize}
+
+\end{document}

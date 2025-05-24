@@ -1,0 +1,40 @@
+{
+    "projectName": "final_sml_project",
+    "description": "SMLを使用したTodoリストアプリケーション",
+    "rules": {
+        "fileExtensions": [".sml", ".sig", ".md"],
+        "ignorePatterns": [
+            "*.o",
+            "*.cm",
+            "*.out",
+            ".DS_Store"
+        ],
+        "formatting": {
+            "indentSize": 4,
+            "useTabs": false,
+            "trimTrailingWhitespace": true,
+            "insertFinalNewline": true
+        },
+        "linting": {
+            "sml": {
+                "enabled": true,
+                "rules": {
+                    "noUnusedVariables": true,
+                    "noUnusedFunctions": true,
+                    "consistentNaming": true
+                }
+            }
+        },
+        "documentation": {
+            "requireComments": true,
+            "commentStyle": "(* ... *)"
+        }
+    },
+    "dependencies": {
+        "smlnj": "110.99"
+    },
+    "build": {
+        "command": "sml",
+        "args": ["todo.sml"]
+    }
+} 
